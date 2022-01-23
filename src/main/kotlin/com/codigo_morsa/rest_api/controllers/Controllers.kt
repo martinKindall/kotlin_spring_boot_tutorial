@@ -1,7 +1,7 @@
 package com.codigo_morsa.rest_api.controllers
 
 import com.codigo_morsa.rest_api.models.Lenguaje
-import com.codigo_morsa.rest_api.repositories.LenguajeRepository
+import com.codigo_morsa.rest_api.services.LenguajeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -13,11 +13,11 @@ import reactor.core.publisher.Mono
 @RestController
 class Controllers {
 
-    lateinit var lenguajeRepository: LenguajeRepository
+    lateinit var lenguajeService: LenguajeService
 
     @Autowired
-    constructor(lenguajeRepository: LenguajeRepository) {
-        this.lenguajeRepository = lenguajeRepository
+    constructor(lenguajeService: LenguajeService) {
+        this.lenguajeService = lenguajeService
     }
 
     @GetMapping("/")
@@ -27,15 +27,13 @@ class Controllers {
 
     @GetMapping("/lenguaje")
     fun getLenguajes(): Mono<List<Lenguaje>> {
-        return Mono.just(lenguajeRepository.findAll().toMutableList())
+        return lenguajeService.getLenguajes()
     }
 
     @PostMapping("/lenguaje")
     fun createLenguaje(
         @RequestBody nuevoLenguaje: Lenguaje
     ): Mono<String> {
-        return Mono.just(lenguajeRepository.save(nuevoLenguaje).let {
-            "Nuevo lenguaje creado, id: ${it.id}"
-        })
+        return lenguajeService.crearLenguaje(nuevoLenguaje)
     }
 }
