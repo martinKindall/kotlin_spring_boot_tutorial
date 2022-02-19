@@ -2,9 +2,10 @@ package com.codigo_morsa.rest_api.controllers
 
 import com.codigo_morsa.rest_api.models.Lenguaje
 import com.codigo_morsa.rest_api.services.LenguajeService
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -14,6 +15,7 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.body
 import reactor.core.publisher.Mono
 import java.sql.Date
 
@@ -34,12 +36,13 @@ class LanguageControllerTest {
     private lateinit var mockLenguaje1: Lenguaje
     private lateinit var mockLenguaje2: Lenguaje
 
-    @BeforeAll
+    @BeforeEach
     fun setup() {
         mockLenguaje1 = Lenguaje(0, "Java", Date(10L), true)
         mockLenguaje2 = Lenguaje(0, "Javascript", Date(10L), false)
 
         whenever(lenguajeService.getLenguajes()).thenReturn(Mono.just(listOf(mockLenguaje1, mockLenguaje2)))
+        whenever(lenguajeService.crearLenguaje(any())).thenReturn(Mono.just("Tudo bem"))
     }
 
     @Test
@@ -55,5 +58,52 @@ class LanguageControllerTest {
             .jsonPath("$.[1].nombre").isEqualTo("Javascript")
             .jsonPath("$.[1].tipado_fuerte").isEqualTo("false")
             .jsonPath("$.[1].lanzamiento").isEqualTo("1970-01-01")
+    }
+
+    @Test
+    fun createLenguajeTest() {
+        client.post()
+            .uri("/lenguaje")
+            .body(Mono.just(mockLenguaje1))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$").isEqualTo("Tudo bem")
+    }
+
+    @Test
+    fun createLenguajeBadRequestTest() {
+        client.post()
+            .uri("/lenguaje")
+            .body(Mono.just("invalid data"))
+            .exchange()
+            .expectStatus().is4xxClientError
+    }
+
+    @Test
+    fun createLenguajeEmptyRequestTest() {
+        client.post()
+            .uri("/lenguaje")
+            .body(Mono.just(""))
+            .exchange()
+            .expectStatus().is4xxClientError
+    }
+
+    @Test
+    fun createLenguajeEmpty2RequestTest() {
+        client.post()
+            .uri("/lenguaje")
+            .body(Mono.just(2))
+            .exchange()
+            .expectStatus().is4xxClientError
+    }
+
+    @Test
+    fun createLenguajeEmpty3RequestTest() {
+        client.post()
+            .uri("/lenguaje")
+            .body(Mono.empty())
+            .exchange()
+            .expectStatus().is4xxClientError
     }
 }
